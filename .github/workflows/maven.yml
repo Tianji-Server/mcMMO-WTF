@@ -29,6 +29,6 @@ jobs:
         run: mvn package --batch-mode --update-snapshots -T 1.5C -f pom.xml -P github
       - uses: actions/upload-artifact@v3
         with:
-          name: codframe
+          name: MCMMO
           path: |
             **/target/*.jar
