@@ -7,8 +7,6 @@ import com.gmail.nossr50.datatypes.meta.OldName;
 import com.gmail.nossr50.datatypes.player.McMMOPlayer;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import com.gmail.nossr50.datatypes.skills.SubSkillType;
-import com.gmail.nossr50.events.fake.FakeEntityDamageByEntityEvent;
-import com.gmail.nossr50.events.fake.FakeEntityDamageEvent;
 import com.gmail.nossr50.mcMMO;
 import com.gmail.nossr50.metadata.MobMetaFlagType;
 import com.gmail.nossr50.metadata.MobMetadataService;
@@ -29,7 +27,6 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.*;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.MetadataValue;
@@ -527,7 +524,6 @@ public final class CombatUtils {
      * @param target LivingEntity which to attempt to damage
      * @param damage Amount of damage to attempt to do
      */
-    @Deprecated
     public static void dealDamage(@NotNull LivingEntity target, double damage) {
         dealDamage(target, damage, DamageCause.CUSTOM, null);
     }
@@ -572,10 +568,15 @@ public final class CombatUtils {
         if (target.isDead()) {
             return;
         }
-
-        if(canDamage(attacker, target, cause, damage)) {
+        try {
+            // TODO: Check for Spigot API for DamageSource, if DamageSource is found then send out a damage() with a custom damage source
             applyIgnoreDamageMetadata(target);
-            target.damage(damage);
+            if (attacker != null) {
+                target.damage(damage, attacker);
+            } else {
+                target.damage(damage);
+            }
+        } finally {
             removeIgnoreDamageMetadata(target);
         }
     }
@@ -740,7 +741,8 @@ public final class CombatUtils {
         XPGainReason xpGainReason;
 
         if (target instanceof Player defender) {
-            if (!ExperienceConfig.getInstance().getExperienceGainsPlayerVersusPlayerEnabled() || PartyManager.inSameParty(mcMMOPlayer.getPlayer(), (Player) target)) {
+            if (!ExperienceConfig.getInstance().getExperienceGainsPlayerVersusPlayerEnabled() ||
+                    (mcMMO.p.getPartyConfig().isPartyEnabled() && mcMMO.p.getPartyManager().inSameParty(mcMMOPlayer.getPlayer(), (Player) target))) {
                 return;
             }
 
@@ -827,7 +829,7 @@ public final class CombatUtils {
                 return false;
             }
 
-            if ((PartyManager.inSameParty(player, defender) || PartyManager.areAllies(player, defender)) && !(Permissions.friendlyFire(player) && Permissions.friendlyFire(defender))) {
+            if ((mcMMO.p.getPartyManager().inSameParty(player, defender) || mcMMO.p.getPartyManager().areAllies(player, defender)) && !(Permissions.friendlyFire(player) && Permissions.friendlyFire(defender))) {
                 return false;
             }
 
@@ -878,24 +880,11 @@ public final class CombatUtils {
 
             if (tamer instanceof Player owner) {
 
-                return (owner == attacker || PartyManager.inSameParty(attacker, owner) || PartyManager.areAllies(attacker, owner));
+                return (owner == attacker || mcMMO.p.getPartyManager().inSameParty(attacker, owner) || mcMMO.p.getPartyManager().areAllies(attacker, owner));
             }
         }
 
         return false;
-    }
-
-    public static boolean canDamage(@Nullable Entity attacker, @NotNull Entity target, @NotNull DamageCause damageCause, double damage) {
-        EntityDamageEvent damageEvent;
-        if (attacker != null) {
-            damageEvent = new FakeEntityDamageByEntityEvent(attacker, target, damageCause, damage);
-        } else {
-            damageEvent = new FakeEntityDamageEvent(target, damageCause, damage);
-        }
-
-        mcMMO.p.getServer().getPluginManager().callEvent(damageEvent);
-
-        return !damageEvent.isCancelled();
     }
 
     /**

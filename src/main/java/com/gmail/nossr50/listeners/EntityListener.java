@@ -5,14 +5,10 @@ import com.gmail.nossr50.config.experience.ExperienceConfig;
 import com.gmail.nossr50.datatypes.player.McMMOPlayer;
 import com.gmail.nossr50.datatypes.skills.SubSkillType;
 import com.gmail.nossr50.datatypes.skills.subskills.interfaces.InteractType;
-import com.gmail.nossr50.events.fake.FakeEntityDamageByEntityEvent;
-import com.gmail.nossr50.events.fake.FakeEntityDamageEvent;
 import com.gmail.nossr50.events.fake.FakeEntityTameEvent;
-import com.gmail.nossr50.events.skills.rupture.McMMOEntityDamageByRuptureEvent;
 import com.gmail.nossr50.mcMMO;
 import com.gmail.nossr50.metadata.MobMetaFlagType;
 import com.gmail.nossr50.metadata.MobMetadataService;
-import com.gmail.nossr50.party.PartyManager;
 import com.gmail.nossr50.runnables.TravelingBlockMetaCleanup;
 import com.gmail.nossr50.skills.archery.Archery;
 import com.gmail.nossr50.skills.mining.BlastMining;
@@ -266,12 +262,12 @@ public class EntityListener implements Listener {
 
             if(event.getCombuster() instanceof Projectile projectile) {
                 if(projectile.getShooter() instanceof Player attacker) {
-                    if(checkParties(event, defender, attacker)) {
+                    if(checkIfInPartyOrSamePlayer(event, defender, attacker)) {
                         event.setCancelled(true);
                     }
                 }
             } else if(event.getCombuster() instanceof Player attacker) {
-                if(checkParties(event, defender, attacker)) {
+                if(checkIfInPartyOrSamePlayer(event, defender, attacker)) {
                     event.setCancelled(true);
                 }
             }
@@ -286,8 +282,10 @@ public class EntityListener implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        if (event instanceof FakeEntityDamageByEntityEvent || event instanceof McMMOEntityDamageByRuptureEvent) {
-            return;
+        if (event.getEntity() instanceof LivingEntity livingEntity) {
+            if (CombatUtils.hasIgnoreDamageMetadata(livingEntity)) {
+                return;
+            }
         }
 
         double damage = event.getFinalDamage();
@@ -365,8 +363,8 @@ public class EntityListener implements Listener {
             //If the attacker is a Player or a projectile belonging to a player
             if(attacker instanceof Projectile projectile) {
                 if(projectile.getShooter() instanceof Player attackingPlayer && !attackingPlayer.equals(defendingPlayer)) {
-                    //Check for party friendly fire and cancel the event
-                    if (checkParties(event, defendingPlayer, attackingPlayer)) {
+                    //Check for friendly fire and cancel the event
+                    if (checkIfInPartyOrSamePlayer(event, defendingPlayer, attackingPlayer)) {
                         return;
                     }
                 }
@@ -384,7 +382,7 @@ public class EntityListener implements Listener {
                     }
                 }
             } else if (attacker instanceof Player attackingPlayer){
-                if (checkParties(event, defendingPlayer, attackingPlayer))
+                if (checkIfInPartyOrSamePlayer(event, defendingPlayer, attackingPlayer))
                     return;
             }
         }
@@ -447,14 +445,6 @@ public class EntityListener implements Listener {
 
                     player.sendMessage("Final damage: " + entityDamageEvent.getFinalDamage());
 
-                    if(entityDamageEvent instanceof FakeEntityDamageByEntityEvent) {
-                        player.sendMessage("This report is for a fake damage event used by mcMMO to test a players permission to hurt another");
-                    }
-
-                    if(entityDamageEvent instanceof McMMOEntityDamageByRuptureEvent) {
-                        player.sendMessage("This report is for a Rupture damage event, which is sent out by mcMMO");
-                    }
-
                     if(entityDamageEvent.isCancelled()) {
                         player.sendMessage("Event was cancelled, which means no damage should be done.");
                     }
@@ -481,14 +471,6 @@ public class EntityListener implements Listener {
                     player.sendMessage("Target players max health: "+otherPlayer.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
                     player.sendMessage("Target players current health: "+otherPlayer.getHealth());
 
-                    if(entityDamageEvent instanceof FakeEntityDamageByEntityEvent) {
-                        player.sendMessage("This report is for a fake damage event used by mcMMO to test a players permission to hurt another");
-                    }
-
-                    if(entityDamageEvent instanceof McMMOEntityDamageByRuptureEvent) {
-                        player.sendMessage("This report is for a Rupture damage event, which is sent out by mcMMO");
-                    }
-
                     if(entityDamageEvent.isCancelled()) {
                         player.sendMessage("Event was cancelled, which means no damage should be done.");
                     }
@@ -499,21 +481,24 @@ public class EntityListener implements Listener {
         }
     }
 
-    public boolean checkParties(Cancellable event, Player defendingPlayer, Player attackingPlayer) {
-        if (!UserManager.hasPlayerDataKey(defendingPlayer) || !UserManager.hasPlayerDataKey(attackingPlayer)) {
+    public boolean checkIfInPartyOrSamePlayer(Cancellable event, Player defendingPlayer, Player attackingPlayer) {
+        // This check is probably necessary outside of the party system
+        if (defendingPlayer.equals(attackingPlayer)) {
             return true;
         }
 
-        // We want to make sure we're not gaining XP or applying abilities
-        // when we hit ourselves
-        if (defendingPlayer.equals(attackingPlayer)) {
+        if(!pluginRef.isPartySystemEnabled()) {
+            return false;
+        }
+
+        if (!UserManager.hasPlayerDataKey(defendingPlayer) || !UserManager.hasPlayerDataKey(attackingPlayer)) {
             return true;
         }
 
         //Party Friendly Fire
         if(!mcMMO.p.getGeneralConfig().getPartyFriendlyFire())
-            if ((PartyManager.inSameParty(defendingPlayer, attackingPlayer)
-                    || PartyManager.areAllies(defendingPlayer, attackingPlayer))
+            if ((mcMMO.p.getPartyManager().inSameParty(defendingPlayer, attackingPlayer)
+                    || mcMMO.p.getPartyManager().areAllies(defendingPlayer, attackingPlayer))
                     && !(Permissions.friendlyFire(attackingPlayer)
                     && Permissions.friendlyFire(defendingPlayer))) {
                 event.setCancelled(true);
@@ -558,8 +543,10 @@ public class EntityListener implements Listener {
          * Old code
          */
 
-        if (event instanceof FakeEntityDamageEvent) {
-            return;
+        if (event.getEntity() instanceof LivingEntity livingEntity) {
+            if (CombatUtils.hasIgnoreDamageMetadata(livingEntity)) {
+                return;
+            }
         }
 
         double damage = event.getFinalDamage();
