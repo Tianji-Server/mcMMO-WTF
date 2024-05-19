@@ -19,7 +19,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.potion.PotionEffect;
 
-import static com.gmail.nossr50.util.PotionEffectMapper.getNausea;
+import static com.gmail.nossr50.util.PotionEffectUtil.getNauseaPotionEffectType;
 
 public class ArcheryManager extends SkillManager {
     public ArcheryManager(McMMOPlayer mcMMOPlayer) {
@@ -27,21 +27,21 @@ public class ArcheryManager extends SkillManager {
     }
 
     public boolean canDaze(LivingEntity target) {
-        if(!RankUtils.hasUnlockedSubskill(getPlayer(), SubSkillType.ARCHERY_DAZE))
+        if (!RankUtils.hasUnlockedSubskill(getPlayer(), SubSkillType.ARCHERY_DAZE))
             return false;
 
         return target instanceof Player && Permissions.isSubSkillEnabled(getPlayer(), SubSkillType.ARCHERY_DAZE);
     }
 
     public boolean canSkillShot() {
-        if(!RankUtils.hasUnlockedSubskill(getPlayer(), SubSkillType.ARCHERY_SKILL_SHOT))
+        if (!RankUtils.hasUnlockedSubskill(getPlayer(), SubSkillType.ARCHERY_SKILL_SHOT))
             return false;
 
         return Permissions.isSubSkillEnabled(getPlayer(), SubSkillType.ARCHERY_SKILL_SHOT);
     }
 
     public boolean canRetrieveArrows() {
-        if(!RankUtils.hasUnlockedSubskill(getPlayer(), SubSkillType.ARCHERY_ARROW_RETRIEVAL))
+        if (!RankUtils.hasUnlockedSubskill(getPlayer(), SubSkillType.ARCHERY_ARROW_RETRIEVAL))
             return false;
 
         return Permissions.isSubSkillEnabled(getPlayer(), SubSkillType.ARCHERY_ARROW_RETRIEVAL);
@@ -55,13 +55,13 @@ public class ArcheryManager extends SkillManager {
      */
     public static double distanceXpBonusMultiplier(LivingEntity target, Entity arrow) {
         //Hacky Fix - some plugins spawn arrows and assign them to players after the ProjectileLaunchEvent fires
-        if(!arrow.hasMetadata(MetadataConstants.METADATA_KEY_ARROW_DISTANCE))
+        if (!arrow.hasMetadata(MetadataConstants.METADATA_KEY_ARROW_DISTANCE))
             return 1;
 
         Location firedLocation = (Location) arrow.getMetadata(MetadataConstants.METADATA_KEY_ARROW_DISTANCE).get(0).value();
         Location targetLocation = target.getLocation();
 
-        if(firedLocation == null || firedLocation.getWorld() == null)
+        if (firedLocation == null || firedLocation.getWorld() == null)
             return 1;
 
         if (firedLocation.getWorld() != targetLocation.getWorld()) {
@@ -77,7 +77,7 @@ public class ArcheryManager extends SkillManager {
      * @param target The {@link LivingEntity} damaged by the arrow
      */
     public void retrieveArrows(LivingEntity target, Projectile projectile) {
-        if(projectile.hasMetadata(MetadataConstants.METADATA_KEY_TRACKED_ARROW)) {
+        if (projectile.hasMetadata(MetadataConstants.METADATA_KEY_TRACKED_ARROW)) {
             Archery.incrementTrackerValue(target);
             projectile.removeMetadata(MetadataConstants.METADATA_KEY_TRACKED_ARROW, mcMMO.p); //Only 1 entity per projectile
         }
@@ -89,7 +89,7 @@ public class ArcheryManager extends SkillManager {
      * @param defender The {@link Player} being affected by the ability
      */
     public double daze(Player defender) {
-        if (!ProbabilityUtil.isSkillRNGSuccessful(SubSkillType.ARCHERY_DAZE, getPlayer())) {
+        if (!ProbabilityUtil.isSkillRNGSuccessful(SubSkillType.ARCHERY_DAZE, mmoPlayer)) {
             return 0;
         }
 
@@ -97,7 +97,7 @@ public class ArcheryManager extends SkillManager {
         dazedLocation.setPitch(90 - Misc.getRandom().nextInt(181));
 
         mcMMO.p.getFoliaLib().getImpl().teleportAsync(defender, dazedLocation);
-        defender.addPotionEffect(new PotionEffect(getNausea(), 20 * 10, 10));
+        defender.addPotionEffect(new PotionEffect(getNauseaPotionEffectType(), 20 * 10, 10));
 
         if (NotificationManager.doesPlayerUseNotifications(defender)) {
             NotificationManager.sendPlayerInformation(defender, NotificationType.SUBSKILL_MESSAGE, "Combat.TouchedFuzzy");
@@ -116,7 +116,7 @@ public class ArcheryManager extends SkillManager {
      * @param oldDamage The raw damage value of this arrow before we modify it
      */
     public double skillShot(double oldDamage) {
-        if (ProbabilityUtil.isNonRNGSkillActivationSuccessful(SubSkillType.ARCHERY_SKILL_SHOT, getPlayer())) {
+        if (ProbabilityUtil.isNonRNGSkillActivationSuccessful(SubSkillType.ARCHERY_SKILL_SHOT, mmoPlayer)) {
             return Archery.getSkillShotBonusDamage(getPlayer(), oldDamage);
         } else {
             return oldDamage;

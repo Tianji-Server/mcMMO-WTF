@@ -28,7 +28,7 @@ public class CrossbowsManager extends SkillManager {
     }
 
     public void handleRicochet(@NotNull Plugin pluginRef, @NotNull Arrow arrow, @NotNull Vector hitBlockNormal) {
-        if(!arrow.isShotFromCrossbow())
+        if (!arrow.isShotFromCrossbow())
             return;
 
         // Check player permission
@@ -100,7 +100,7 @@ public class CrossbowsManager extends SkillManager {
     }
 
     public double poweredShot(double oldDamage) {
-        if (ProbabilityUtil.isNonRNGSkillActivationSuccessful(SubSkillType.CROSSBOWS_POWERED_SHOT, getPlayer())) {
+        if (ProbabilityUtil.isNonRNGSkillActivationSuccessful(SubSkillType.CROSSBOWS_POWERED_SHOT, mmoPlayer)) {
             return getPoweredShotBonusDamage(getPlayer(), oldDamage);
         } else {
             return oldDamage;

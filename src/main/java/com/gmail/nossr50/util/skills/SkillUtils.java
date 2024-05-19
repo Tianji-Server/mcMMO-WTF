@@ -10,7 +10,7 @@ import com.gmail.nossr50.datatypes.skills.SubSkillType;
 import com.gmail.nossr50.datatypes.skills.SuperAbilityType;
 import com.gmail.nossr50.locale.LocaleLoader;
 import com.gmail.nossr50.mcMMO;
-import com.gmail.nossr50.metadata.ItemMetadataService;
+import com.gmail.nossr50.util.ItemMetadataUtils;
 import com.gmail.nossr50.util.ItemUtils;
 import com.gmail.nossr50.util.Misc;
 import com.gmail.nossr50.util.Permissions;
@@ -32,7 +32,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
 
-import static com.gmail.nossr50.util.PotionEffectMapper.getHaste;
+import static com.gmail.nossr50.util.ItemMetadataUtils.*;
+import static com.gmail.nossr50.util.PotionEffectUtil.getHastePotionEffectType;
 
 public final class SkillUtils {
     /**
@@ -60,7 +61,7 @@ public final class SkillUtils {
 
         int length;
 
-        if(abilityLengthCap > 0)
+        if (abilityLengthCap > 0)
         {
             length =     (int) Math.min(abilityLengthCap, 2 + (skillValue / abilityLengthVar));
         } else {
@@ -141,7 +142,7 @@ public final class SkillUtils {
         if (HiddenConfig.getInstance().useEnchantmentBuffs()) {
             ItemStack heldItem = player.getInventory().getItemInMainHand();
 
-            if(heldItem == null)
+            if (heldItem == null)
                 return;
 
             if (!ItemUtils.canBeSuperAbilityDigBoosted(heldItem)) {
@@ -152,14 +153,14 @@ public final class SkillUtils {
             ItemUtils.addDigSpeedToItem(heldItem, heldItem.getEnchantmentLevel(mcMMO.p.getEnchantmentMapper().getEfficiency()));
 
             //1.13.2+ will have persistent metadata for this item
-            mcMMO.getMetadataService().getItemMetadataService().setSuperAbilityBoostedItem(heldItem, originalDigSpeed);
+            ItemMetadataUtils.setSuperAbilityBoostedItem(heldItem, originalDigSpeed);
         } else {
             int duration = 0;
             int amplifier = 0;
 
-            if (player.hasPotionEffect(getHaste())) {
+            if (player.hasPotionEffect(getHastePotionEffectType())) {
                 for (PotionEffect effect : player.getActivePotionEffects()) {
-                    if (effect.getType() == getHaste()) {
+                    if (effect.getType() == getHastePotionEffectType()) {
                         duration = effect.getDuration();
                         amplifier = effect.getAmplifier();
                         break;
@@ -170,7 +171,7 @@ public final class SkillUtils {
             McMMOPlayer mcMMOPlayer = UserManager.getPlayer(player);
 
             //Not Loaded
-            if(mcMMOPlayer == null)
+            if (mcMMOPlayer == null)
                 return;
 
             PrimarySkillType skill = mcMMOPlayer.getAbilityMode(SuperAbilityType.SUPER_BREAKER) ? PrimarySkillType.MINING : PrimarySkillType.EXCAVATION;
@@ -180,7 +181,7 @@ public final class SkillUtils {
 
             int ticks;
 
-            if(abilityLengthCap > 0)
+            if (abilityLengthCap > 0)
             {
                 ticks = PerksUtils.handleActivationPerks(player,  Math.min(abilityLengthCap, 2 + (mcMMOPlayer.getSkillLevel(skill) / abilityLengthVar)),
                         mcMMO.p.getSkillTools().getSuperAbilityMaxLength(mcMMO.p.getSkillTools().getSuperAbility(skill))) * Misc.TICK_CONVERSION_FACTOR;
@@ -189,7 +190,7 @@ public final class SkillUtils {
                         mcMMO.p.getSkillTools().getSuperAbilityMaxLength(mcMMO.p.getSkillTools().getSuperAbility(skill))) * Misc.TICK_CONVERSION_FACTOR;
             }
 
-            PotionEffect abilityBuff = new PotionEffect(getHaste(), duration + ticks, amplifier + 10);
+            PotionEffect abilityBuff = new PotionEffect(getHastePotionEffectType(), duration + ticks, amplifier + 10);
             player.addPotionEffect(abilityBuff, true);
         }
     }
@@ -201,20 +202,18 @@ public final class SkillUtils {
     }
 
     public static void removeAbilityBuff(@Nullable ItemStack itemStack) {
-        if(itemStack == null)
+        if (itemStack == null)
             return;
 
-        if(!ItemUtils.canBeSuperAbilityDigBoosted(itemStack))
+        if (!ItemUtils.canBeSuperAbilityDigBoosted(itemStack))
             return;
 
 
         //1.13.2+ will have persistent metadata for this itemStack
-        ItemMetadataService itemMetadataService = mcMMO.getMetadataService().getItemMetadataService();
-
-        if(itemMetadataService.isLegacyAbilityTool(itemStack)) {
+        if (isLegacyAbilityTool(itemStack)) {
             ItemMeta itemMeta = itemStack.getItemMeta();
 
-            if(itemMeta != null) {
+            if (itemMeta != null) {
                 // This is safe to call without prior checks.
                 itemMeta.removeEnchant(mcMMO.p.getEnchantmentMapper().getEfficiency());
 
@@ -223,8 +222,8 @@ public final class SkillUtils {
             }
         }
 
-        if(itemMetadataService.isSuperAbilityBoosted(itemStack)) {
-            itemMetadataService.removeBonusDigSpeedOnSuperAbilityTool(itemStack);
+        if (isSuperAbilityBoosted(itemStack)) {
+            removeBonusDigSpeedOnSuperAbilityTool(itemStack);
         }
     }
 
@@ -240,7 +239,7 @@ public final class SkillUtils {
      * @param maxDamageModifier the amount to adjust the max damage by
      */
     public static void handleDurabilityChange(ItemStack itemStack, double durabilityModifier, double maxDamageModifier) {
-        if(itemStack.hasItemMeta() && itemStack.getItemMeta().isUnbreakable()) {
+        if (itemStack.hasItemMeta() && itemStack.getItemMeta().isUnbreakable()) {
             return;
         }
 
@@ -270,7 +269,7 @@ public final class SkillUtils {
      * @param maxDamageModifier the amount to adjust the max damage by
      */
     public static void handleArmorDurabilityChange(ItemStack itemStack, double durabilityModifier, double maxDamageModifier) {
-        if(itemStack.hasItemMeta() && itemStack.getItemMeta().isUnbreakable()) {
+        if (itemStack.hasItemMeta() && itemStack.getItemMeta().isUnbreakable()) {
             return;
         }
 
@@ -316,7 +315,7 @@ public final class SkillUtils {
     public static int getRepairAndSalvageQuantities(Material itemMaterial, Material recipeMaterial) {
         int quantity = 0;
 
-        if(mcMMO.getMaterialMapStore().isNetheriteTool(itemMaterial) || mcMMO.getMaterialMapStore().isNetheriteArmor(itemMaterial)) {
+        if (mcMMO.getMaterialMapStore().isNetheriteTool(itemMaterial) || mcMMO.getMaterialMapStore().isNetheriteArmor(itemMaterial)) {
             //One netherite bar requires 4 netherite scraps
             return 4;
         }
@@ -324,10 +323,10 @@ public final class SkillUtils {
         for(Iterator<? extends Recipe> recipeIterator = Bukkit.getServer().recipeIterator(); recipeIterator.hasNext();) {
             Recipe bukkitRecipe = recipeIterator.next();
 
-            if(bukkitRecipe.getResult().getType() != itemMaterial)
+            if (bukkitRecipe.getResult().getType() != itemMaterial)
                 continue;
 
-            if(bukkitRecipe instanceof ShapelessRecipe) {
+            if (bukkitRecipe instanceof ShapelessRecipe) {
                 for (ItemStack ingredient : ((ShapelessRecipe) bukkitRecipe).getIngredientList()) {
                     if (ingredient != null
                             && (recipeMaterial == null || ingredient.getType() == recipeMaterial)
@@ -335,7 +334,7 @@ public final class SkillUtils {
                         quantity += ingredient.getAmount();
                     }
                 }
-            } else if(bukkitRecipe instanceof ShapedRecipe) {
+            } else if (bukkitRecipe instanceof ShapedRecipe) {
                 for (ItemStack ingredient : ((ShapedRecipe) bukkitRecipe).getIngredientMap().values()) {
                     if (ingredient != null
                             && (recipeMaterial == null || ingredient.getType() == recipeMaterial)
