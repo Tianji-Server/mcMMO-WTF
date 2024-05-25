@@ -1,3 +1,15 @@
+Version 2.2.013
+    Modified the RNG for dropping non-ore blocks from Blast Mining to yield about 50% of what was destroyed
+    (API) Deprecated com.gmail.nossr50.mcMMO.getPlaceStore
+    (API) Added com.gmail.nossr50.mcMMO.getUserBlockTracker
+    (API) Added com.gmail.nossr50.mcMMO.getChunkManager
+    (API) Added new methods to com.gmail.nossr50.util.blockmeta.UserBlockTracker for easier readability
+    (API) Deprecated the old poorly named methods in UserBlockTracker
+    (Codebase) Cleaned up and organized unit tests relating to UserBlockTracker
+
+    NOTES:
+    Not planning to delete the deprecated methods in UserBlockTracker anytime soon, as nothing has really changed other than the names
+
 Version 2.2.012
     Fixed a bug where Daze would cause an exception in older game versions (1.20.4 and older)
 

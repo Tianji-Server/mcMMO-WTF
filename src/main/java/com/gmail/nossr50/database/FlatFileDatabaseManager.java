@@ -152,8 +152,7 @@ public final class FlatFileDatabaseManager implements DatabaseManager {
                     // If they're still around, rewrite them to the file.
                     if (!powerless) {
                         writer.append(line).append("\r\n");
-                    }
-                    else {
+                    } else {
                         purgedUsers++;
                     }
                 }
@@ -234,7 +233,7 @@ public final class FlatFileDatabaseManager implements DatabaseManager {
                         if (rewrite) {
                             // Rewrite their data with a valid time
                             character[OVERHAUL_LAST_LOGIN] = Long.toString(lastPlayed);
-                            String newLine = org.apache.commons.lang.StringUtils.join(character, ":");
+                            String newLine = org.apache.commons.lang3.StringUtils.join(character, ":");
                             writer.append(newLine).append("\r\n");
                         } else {
                             writer.append(line).append("\r\n");
@@ -905,7 +904,7 @@ public final class FlatFileDatabaseManager implements DatabaseManager {
                         }
 
                         character[UUID_INDEX] = fetchedUUIDs.remove(character[USERNAME_INDEX]).toString();
-                        line = org.apache.commons.lang.StringUtils.join(character, ":") + ":";
+                        line = org.apache.commons.lang3.StringUtils.join(character, ":") + ":";
                     }
 
                     i++;

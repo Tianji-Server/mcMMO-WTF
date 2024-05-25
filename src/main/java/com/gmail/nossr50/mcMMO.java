@@ -39,6 +39,7 @@ import com.gmail.nossr50.skills.salvage.salvageables.SimpleSalvageableManager;
 import com.gmail.nossr50.util.*;
 import com.gmail.nossr50.util.blockmeta.ChunkManager;
 import com.gmail.nossr50.util.blockmeta.ChunkManagerFactory;
+import com.gmail.nossr50.util.blockmeta.UserBlockTracker;
 import com.gmail.nossr50.util.commands.CommandRegistrationManager;
 import com.gmail.nossr50.util.compat.CompatibilityManager;
 import com.gmail.nossr50.util.experience.FormulaManager;
@@ -78,13 +79,13 @@ import java.util.List;
 public class mcMMO extends JavaPlugin {
     /* Managers & Services */
     private static PlatformManager platformManager;
-    private static ChunkManager       placeStore;
-    private static RepairableManager  repairableManager;
+    private static ChunkManager chunkManager;
+    private static RepairableManager repairableManager;
     private static SalvageableManager salvageableManager;
-    private static ModManager         modManager;
-    private static DatabaseManager    databaseManager;
-    private static FormulaManager     formulaManager;
-    private static UpgradeManager     upgradeManager;
+    private static ModManager modManager;
+    private static DatabaseManager databaseManager;
+    private static FormulaManager formulaManager;
+    private static UpgradeManager upgradeManager;
     private static MaterialMapStore materialMapStore;
     private static PlayerLevelUtils playerLevelUtils;
     private static TransientMetadataTools transientMetadataTools;
@@ -147,8 +148,7 @@ public class mcMMO extends JavaPlugin {
     }
 
 
-    protected mcMMO(JavaPluginLoader loader, PluginDescriptionFile description, File dataFolder, File file)
-    {
+    protected mcMMO(JavaPluginLoader loader, PluginDescriptionFile description, File dataFolder, File file) {
         super(loader, description, dataFolder, file);
     }
 
@@ -228,8 +228,7 @@ public class mcMMO extends JavaPlugin {
             //Check for the newer API and tell them what to do if its missing
             checkForOutdatedAPI();
 
-            if (serverAPIOutdated)
-            {
+            if (serverAPIOutdated) {
                 foliaLib
                         .getImpl()
                         .runTimer(
@@ -237,8 +236,7 @@ public class mcMMO extends JavaPlugin {
                                 20, 20*60*30
                         );
 
-                if (platformManager.getServerSoftware() == ServerSoftwareType.CRAFT_BUKKIT)
-                {
+                if (platformManager.getServerSoftware() == ServerSoftwareType.CRAFT_BUKKIT) {
                     foliaLib
                             .getImpl()
                             .runTimer(
@@ -267,7 +265,7 @@ public class mcMMO extends JavaPlugin {
                 scheduleTasks();
                 CommandRegistrationManager.registerCommands();
 
-                placeStore = ChunkManagerFactory.getChunkManager(); // Get our ChunkletManager
+                chunkManager = ChunkManagerFactory.getChunkManager(); // Get our ChunkletManager
 
                 if (generalConfig.getPTPCommandWorldPermissions()) {
                     Permissions.generateWorldTeleportPermissions();
@@ -294,8 +292,7 @@ public class mcMMO extends JavaPlugin {
 
             if (!(t instanceof ExceptionInInitializerError)) {
                 t.printStackTrace();
-            }
-            else {
+            } else {
                 getLogger().info("Please do not replace the mcMMO jar while the server is running.");
             }
 
@@ -349,8 +346,7 @@ public class mcMMO extends JavaPlugin {
     }
 
     @Override
-    public void onLoad()
-    {
+    public void onLoad() {
         if (getServer().getPluginManager().getPlugin("WorldGuard") != null) {
             WorldGuardManager.getInstance().registerFlags();
         }
@@ -380,7 +376,7 @@ public class mcMMO extends JavaPlugin {
                 ScoreboardManager.teardownAll();
 
             formulaManager.saveFormula();
-            placeStore.closeAll();
+            chunkManager.closeAll();
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -443,8 +439,30 @@ public class mcMMO extends JavaPlugin {
         return formulaManager;
     }
 
+    /**
+     * Get the {@link UserBlockTracker}.
+     * @return the {@link UserBlockTracker}
+     */
+    public static UserBlockTracker getUserBlockTracker() {
+        return chunkManager;
+    }
+
+    /**
+     * Get the chunk manager.
+     * @return the chunk manager
+     */
+    public static ChunkManager getChunkManager() {
+        return chunkManager;
+    }
+
+    /**
+     * Get the chunk manager.
+     * @deprecated Use {@link #getChunkManager()} or {@link #getUserBlockTracker()} instead.
+     * @return the chunk manager
+     */
+    @Deprecated(since = "2.2.013", forRemoval = true)
     public static ChunkManager getPlaceStore() {
-        return placeStore;
+        return chunkManager;
     }
 
     public static RepairableManager getRepairableManager() {
@@ -615,8 +633,7 @@ public class mcMMO extends JavaPlugin {
 
         InteractionManager.initMaps(); //Init maps
 
-        if (CoreSkillsConfig.getInstance().isPrimarySkillEnabled(PrimarySkillType.ACROBATICS))
-        {
+        if (CoreSkillsConfig.getInstance().isPrimarySkillEnabled(PrimarySkillType.ACROBATICS)) {
             LogUtils.debug(mcMMO.p.getLogger(), "Enabling Acrobatics Skills");
 
             //TODO: Should do this differently
@@ -651,8 +668,7 @@ public class mcMMO extends JavaPlugin {
 
         if (purgeIntervalTicks == 0) {
             getFoliaLib().getImpl().runLaterAsync(new UserPurgeTask(), 2 * Misc.TICK_CONVERSION_FACTOR); // Start 2 seconds after startup.
-        }
-        else if (purgeIntervalTicks > 0) {
+        } else if (purgeIntervalTicks > 0) {
             getFoliaLib().getImpl().runTimerAsync(new UserPurgeTask(), purgeIntervalTicks, purgeIntervalTicks);
         }
 
@@ -675,8 +691,7 @@ public class mcMMO extends JavaPlugin {
             getFoliaLib().getImpl().runTimer(new ClearRegisteredXPGainTask(), 60, 60);
         }
 
-        if (mcMMO.p.getAdvancedConfig().allowPlayerTips())
-        {
+        if (mcMMO.p.getAdvancedConfig().allowPlayerTips()) {
             getFoliaLib().getImpl().runTimer(new NotifySquelchReminderTask(), 60, ((20 * 60) * 60));
         }
     }

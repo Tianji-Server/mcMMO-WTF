@@ -282,7 +282,7 @@ public class HerbalismManager extends SkillManager {
             if (brokenPlant.getLocation().equals(originalBreak.getBlock().getLocation())) {
                 //If its the same block as the original, we are going to directly check it for being a valid XP gain and add it to the nonChorusBlocks list even if its a chorus block
                 //This stops a delay from happening when bringing up the XP bar for chorus trees
-                if (!mcMMO.getPlaceStore().isTrue(originalBreak)) {
+                if (!mcMMO.getUserBlockTracker().isIneligible(originalBreak)) {
                     //Even if its a chorus block, the original break will be moved to nonChorusBlocks for immediate XP rewards
                     noDelayPlantBlocks.add(brokenPlant);
                 } else {
@@ -335,7 +335,7 @@ public class HerbalismManager extends SkillManager {
             BlockData plantData = brokenPlantState.getBlockData();
 
             //Check for double drops
-            if (!mcMMO.getPlaceStore().isTrue(brokenPlant)) {
+            if (!mcMMO.getUserBlockTracker().isIneligible(brokenPlant)) {
 
                 /*
                  *
@@ -413,7 +413,7 @@ public class HerbalismManager extends SkillManager {
             BlockState brokenBlockNewState = brokenPlantBlock.getState();
             BlockData plantData = brokenBlockNewState.getBlockData();
 
-            if (mcMMO.getPlaceStore().isTrue(brokenBlockNewState)) {
+            if (mcMMO.getUserBlockTracker().isIneligible(brokenBlockNewState)) {
                 /*
                  *
                  * Unnatural Blocks
@@ -427,7 +427,7 @@ public class HerbalismManager extends SkillManager {
                 }
 
                 //Mark it as natural again as it is being broken
-                mcMMO.getPlaceStore().setFalse(brokenBlockNewState);
+                mcMMO.getUserBlockTracker().setEligible(brokenBlockNewState);
             } else {
                 /*
                  *
@@ -489,9 +489,9 @@ public class HerbalismManager extends SkillManager {
                 continue;
             }
 
-            if (mcMMO.getPlaceStore().isTrue(brokenBlockNewState)) {
+            if (mcMMO.getUserBlockTracker().isIneligible(brokenBlockNewState)) {
                 //Mark it as natural again as it is being broken
-                mcMMO.getPlaceStore().setFalse(brokenBlockNewState);
+                mcMMO.getUserBlockTracker().setEligible(brokenBlockNewState);
             } else {
                 //TODO: Do we care about chorus flower age?
                 //Calculate XP for the old type
@@ -691,7 +691,7 @@ public class HerbalismManager extends SkillManager {
                     return false;
                 }
                 blockState.setType(Material.AIR);
-                Misc.spawnItem(getPlayer(), location, treasure.getDrop(), ItemSpawnReason.HYLIAN_LUCK_TREASURE);
+                ItemUtils.spawnItem(getPlayer(), location, treasure.getDrop(), ItemSpawnReason.HYLIAN_LUCK_TREASURE);
                 NotificationManager.sendPlayerInformation(mmoPlayer.getPlayer(), NotificationType.SUBSKILL_MESSAGE, "Herbalism.HylianLuck");
                 return true;
             }
@@ -845,11 +845,9 @@ public class HerbalismManager extends SkillManager {
 
                 if (greenTerra || greenThumbStage > 2) {
                     finalAge = 2;
-                }
-                else if (greenThumbStage == 2) {
+                } else if (greenThumbStage == 2) {
                     finalAge = 1;
-                }
-                else {
+                } else {
                     finalAge = 0;
                 }
                 break;
@@ -858,8 +856,7 @@ public class HerbalismManager extends SkillManager {
 
                 if (getGreenThumbStage(greenTerra) >= 2) {
                     finalAge = 1;
-                }
-                else {
+                } else {
                     finalAge = 0;
                 }
                 break;
