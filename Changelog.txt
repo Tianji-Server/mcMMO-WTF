@@ -1,4 +1,28 @@
+Version 2.2.016
+    (SQL) Fixed a bug where skill cooldowns were being loaded for players incorrectly
+
+Version 2.2.015
+    Added Maces skill
+    Added Mace to repair.vanilla.yml (see notes)
+    Fixed a bug where spamming attacks would still apply full bonus dmg and full chance to proc abilities (see notes)
+    Fixed some misc missing permissions for crossbows/tridents
+
+    NOTES:
+    You shouldn't need to update repair.vanilla.yml, it should update automatically
+    Maces is a new skill that is in early development, feedback is appreciated.
+    Some ideas I had for the Maces are on hold as they are lacking proper API from Spigot.
+    This is mostly pertaining to smash attacks, I had some ideas for enhancing them but without the proper API I will hold off for now.
+    While working on Maces, I noticed a bug where spamming attacks would still apply full bonus damage and full chance to proc abilities, this has been fixed.
+    When you swing your weapon in Minecraft, you gain an "Attack Strength" value, which is relative to your cooldown, mcMMO was supposed to be making use of this value, but at some point in the past this was broken.
+    I have fixed this and now mcMMO will use the attack strength value to determine the bonus damage and chance to proc abilities.
+    For servers modifying Minecraft combat to not have this "cooldown", mcMMO should behave as you would expect, with full damage and full chance to proc abilities even when spamming attacks.
+
+Version 2.2.014
+    Fixed a bug where Luck Of The Sea was being applied for Super Breaker (and other abilities)
+
 Version 2.2.013
+    Added Breeze to experience.yml
+    Added Bogged to experience.yml
     (Locale) Updates to zh_TW (thanks chunkiuu)
     (Locale) Updates to zh_CN (thanks haha44444)
     Modified the RNG for dropping non-ore blocks from Blast Mining to yield about 50% of what was destroyed
@@ -8,9 +32,14 @@ Version 2.2.013
     (API) Added new methods to com.gmail.nossr50.util.blockmeta.UserBlockTracker for easier readability
     (API) Deprecated many poorly named methods in UserBlockTracker (see notes)
     (Codebase) Cleaned up and organized unit tests relating to UserBlockTracker
+    Added missing entries for Tridents/Xbows/Maces to config.yml (see notes)
 
     NOTES:
-    Not planning to delete the deprecated methods in UserBlockTracker anytime soon, as nothing has really changed other than the names
+    Some settings such as Hardcore.Death_Stat_Loss.Enabled were missing entries for the new skills, I have added them to the default config.
+    Missing entries does not mean these things wouldn't work without them present, as default values will be used when config entries are not present.
+    These missing entries should be added to your config upon start up with this update.
+    Regarding the API changes, not planning to delete the deprecated methods in UserBlockTracker anytime soon, as nothing has really changed other than the names.
+    For anyone consuming mcMMO API, I would still recommend switching off these deprecated methods as soon as you can, just for future-proofing.
 
 Version 2.2.012
     Fixed a bug where Daze would cause an exception in older game versions (1.20.4 and older)
