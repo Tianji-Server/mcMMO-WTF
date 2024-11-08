@@ -21,10 +21,8 @@ import com.gmail.nossr50.skills.unarmed.UnarmedManager;
 import com.gmail.nossr50.util.*;
 import com.gmail.nossr50.util.player.NotificationManager;
 import com.gmail.nossr50.util.player.UserManager;
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.*;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -39,6 +37,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 import static com.gmail.nossr50.datatypes.experience.XPGainReason.PVP;
+import static com.gmail.nossr50.util.AttributeMapper.MAPPED_MOVEMENT_SPEED;
 import static com.gmail.nossr50.util.MobMetadataUtils.hasMobFlag;
 
 public final class CombatUtils {
@@ -899,9 +898,7 @@ public final class CombatUtils {
                 baseXP = 20 * ExperienceConfig.getInstance().getPlayerVersusPlayerXP();
             }
         } else {
-            if (mcMMO.getModManager().isCustomEntity(target)) {
-                baseXP = mcMMO.getModManager().getEntity(target).getXpMultiplier();
-            } else if (target instanceof Animals) {
+            if (target instanceof Animals) {
                 EntityType type = target.getType();
                 baseXP = ExperienceConfig.getInstance().getAnimalsXP(type);
             } else if (target instanceof Monster) {
@@ -920,7 +917,6 @@ public final class CombatUtils {
                     }
                 } else {
                     baseXP = 1.0;
-                    mcMMO.getModManager().addCustomEntity(target);
                 }
             }
 
@@ -1047,8 +1043,6 @@ public final class CombatUtils {
             tier = 4;
         } else if (ItemUtils.isNetheriteTool(inHand)) {
             tier = 5;
-        } else if (mcMMO.getModManager().isCustomTool(inHand)) {
-            tier = mcMMO.getModManager().getTool(inHand).getTier();
         }
 
         return tier;
@@ -1071,7 +1065,7 @@ public final class CombatUtils {
     }
 
     public static void modifyMoveSpeed(@NotNull LivingEntity livingEntity, double multiplier) {
-        AttributeInstance attributeInstance = livingEntity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
+        AttributeInstance attributeInstance = livingEntity.getAttribute(MAPPED_MOVEMENT_SPEED);
 
         if (attributeInstance != null) {
             double normalSpeed = attributeInstance.getBaseValue();
