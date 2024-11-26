@@ -1,5 +1,29 @@
+Version 2.2.029
+    Fixed bug where block checks at world height would throw IndexOutOfBounds exceptions
+
+Version 2.2.028
+    Fixed stack overflow during ChunkUnloadEvent
+    Fixed a bug where you had to wait to summon another COTW summon if one or more of them had died or otherwise expired before their time limit
+    McMMOItemSpawnEvent#setItemStack being ignored (thanks galacticwarrior9)
+    (API) Added McMMOPlayerMasterAnglerEvent (thanks bobcat4848)
+
+Version 2.2.027
+    Added Tridents / Crossbows to salvage.vanilla.yml config (see notes)
+    Fixed an issue where Folia could have all of its threads lock up effectively killing the server
+    Fixed concurrency issue with Folia regarding locale strings
+    Fixed concurrency issue with Folia regarding COTW summons
+    Updated 'Salvage.SubSkill.ScrapCollector.Stat' to no longer mention luck being involved
+    The amount of materials from salvage are no longer luck-based, you will get a deterministic amount based on damage to the item.
+    Fixed Ricocheted arrows losing some data after a ricochet
+    Changed color of locale strings for 'Repair.Listener.Anvil' to be easier to read
+    Changed color of locale strings for 'Salvage.Listener.Anvil' to be easier to read
+
+    NOTES:
+    Tridents and Crossbows are now in the salvage.vanilla.yml config, you will need to either delete this config file to regenerate it or add the entries manually.
+    You can check the default config file after running this mcMMO update at least once in the defaults folder at plugins\mcMMO\defaults to see what you would need to add if you want to take the manual approach
+
 Version 2.2.026
-    Fixed NPE on ChunkUnloadEvent
+    Fixed NullPointerException on ChunkUnloadEvent
 
 Version 2.2.025
     Fixed NullPointerException spam when processing XP for child skills
